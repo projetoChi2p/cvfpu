@@ -297,12 +297,54 @@ package fpnew_pkg;
     return (a > b) ? a : b;
   endfunction
 
+`define NEW_EXP_MAN
+
+  // Returns the number of expoent bits for a format
+  function automatic int unsigned exp_bits(fp_format_e fmt);
+`ifdef NEW_EXP_MAN
+    unique case (fmt)
+      FP32:  return 8;
+      FP64: return 11;
+      FP16: return 5;
+      FP8: return 5;
+      FP16ALT: return 8;
+      default: begin
+        return 0;
+      end
+    endcase
+`else
+    return FP_ENCODINGS[fmt].exp_bits;
+`endif
+  endfunction
+
+  // Returns the number of mantissa bits for a format
+  function automatic int unsigned man_bits(fp_format_e fmt);
+`ifdef NEW_EXP_MAN
+    unique case (fmt)
+      FP32:  return 23;
+      FP64: return 52;
+      FP16: return 10;
+      FP8: return 2;
+      FP16ALT: return 7;
+      default: begin
+        return 0;
+      end
+    endcase
+`else
+    return FP_ENCODINGS[fmt].man_bits;
+`endif
+  endfunction
+
   // -------------------------------------------
   // Helper functions for FP formats and values
   // -------------------------------------------
   // Returns the width of a FP format
   function automatic int unsigned fp_width(fp_format_e fmt);
+`ifdef NEW_EXP_MAN
+    return exp_bits(fmt) + man_bits(fmt) + 1;
+`else
     return FP_ENCODINGS[fmt].exp_bits + FP_ENCODINGS[fmt].man_bits + 1;
+`endif
   endfunction
 
   // Returns the widest FP format present
@@ -323,19 +365,9 @@ package fpnew_pkg;
     return res;
   endfunction
 
-  // Returns the number of expoent bits for a format
-  function automatic int unsigned exp_bits(fp_format_e fmt);
-    return FP_ENCODINGS[fmt].exp_bits;
-  endfunction
-
-  // Returns the number of mantissa bits for a format
-  function automatic int unsigned man_bits(fp_format_e fmt);
-    return FP_ENCODINGS[fmt].man_bits;
-  endfunction
-
   // Returns the bias value for a given format (as per IEEE 754-2008)
   function automatic int unsigned bias(fp_format_e fmt);
-    return unsigned'(2**(FP_ENCODINGS[fmt].exp_bits-1)-1); // symmetrical bias
+    return unsigned'(2**(exp_bits(fmt)-1)-1); // symmetrical bias
   endfunction
 
   function automatic fp_encoding_t super_format(fmt_logic_t cfg);
