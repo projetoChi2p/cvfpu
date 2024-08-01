@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+`default_nettype wire
+
 module gated_clk_cell(
   clk_in,
   global_en,
